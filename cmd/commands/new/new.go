@@ -101,9 +101,13 @@ import (
 )
 
 func init() {
+	// _, file, _, _ := runtime.Caller(1)
+	// apppath, _ := filepath.Abs(filepath.Dir(filepath.Join(file, ".." + string(filepath.Separator))))
+	// beego.TestBeegoInit(apppath)
 	_, file, _, _ := runtime.Caller(1)
-	apppath, _ := filepath.Abs(filepath.Dir(filepath.Join(file, ".." + string(filepath.Separator))))
-	beego.TestBeegoInit(apppath)
+	currpath, _ := os.Getwd()
+	currpath = filepath.Join(currpath, appname)
+	beego.TestBeegoInit(currpath)
 }
 
 

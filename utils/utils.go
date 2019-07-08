@@ -303,12 +303,12 @@ func Tmpl(text string, data interface{}) {
 }
 
 func CheckEnv(appname string) (apppath, packpath string, err error) {
-	gps := GetGOPATHs()
+	/* gps := GetGOPATHs()
 	if len(gps) == 0 {
 		beeLogger.Log.Fatal("GOPATH environment variable is not set or empty")
-	}
+	} */
 	currpath, _ := os.Getwd()
-	currpath = filepath.Join(currpath, appname)
+	/* currpath = filepath.Join(currpath, appname)
 	for _, gpath := range gps {
 		gsrcpath := filepath.Join(gpath, "src")
 		if strings.HasPrefix(strings.ToLower(currpath), strings.ToLower(gsrcpath)) {
@@ -325,6 +325,8 @@ func CheckEnv(appname string) (apppath, packpath string, err error) {
 	beeLogger.Log.Debugf("GOPATH: %s", FILE(), LINE(), gopath)
 
 	gosrcpath := filepath.Join(gopath, "src")
+	apppath = filepath.Join(gosrcpath, appname) */
+	gosrcpath := filepath.Join(currpath, "src")
 	apppath = filepath.Join(gosrcpath, appname)
 
 	if _, e := os.Stat(apppath); !os.IsNotExist(e) {
