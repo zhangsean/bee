@@ -196,7 +196,19 @@ type OrmTag struct {
 func (tb *Table) String() string {
 	rv := fmt.Sprintf("type %s struct {\n", utils.CamelCase(tb.Name))
 	for _, v := range tb.Columns {
-		rv += v.String() + "\n"
+		if v.Name == "ID" {
+			rv += v.String() + "\n"
+			rv += fmt.Sprintf("%sPost\n", utils.CamelCase(tb.Name))
+			break
+		}
+	}
+	rv += "}\n\n"
+	rv += fmt.Sprintf("// %sPost post data model\n", utils.CamelCase(tb.Name))
+	rv += fmt.Sprintf("type %sPost struct {\n", utils.CamelCase(tb.Name))
+	for _, v := range tb.Columns {
+		if v.Name != "ID" {
+			rv += v.String() + "\n"
+		}
 	}
 	rv += "}\n"
 	return rv
@@ -1211,7 +1223,7 @@ func (c *{{ctrlName}}Controller) URLMapping() {
 // Post ...
 // @Title Post
 // @Description create {{ctrlName}}
-// @Param	body		body 	models.{{ctrlName}}	true		"body for {{ctrlName}} content"
+// @Param	body		body 	models.{{ctrlName}}Post	true		"body for {{ctrlName}} content"
 // @Success 201 {object} models.{{ctrlName}}Result
 // @Failure 403 body is empty
 // @router / [post]
@@ -1316,7 +1328,7 @@ func (c *{{ctrlName}}Controller) GetAll() {
 // @Title Put
 // @Description update the {{ctrlName}}
 // @Param	id		path 	string	true		"The id you want to update"
-// @Param	body		body 	models.{{ctrlName}}	true		"body for {{ctrlName}} content"
+// @Param	body		body 	models.{{ctrlName}}Post	true		"body for {{ctrlName}} content"
 // @Success 200 {object} models.{{ctrlName}}Result
 // @Failure 403 :id is not int
 // @router /:id [put]
