@@ -298,6 +298,89 @@ func DeleteUser(uid string) {
 }
 `
 
+var resultModel = `package models
+
+// Code 状态码
+type Code int
+
+const (
+	// Success 成功 0
+	Success Code = iota
+	// Error 错误 1
+	Error
+	// Failure 失败 2
+	Failure
+)
+
+// Result API返回结果模型
+type Result struct {
+	Code    int         ` + "`json:\"code\" description:\"返回结果代码\"`" + `
+	Message string      ` + "`json:\"message\" description:\"返回结果描述\"`" + `
+	Data    interface{} ` + "`json:\"data\" description:\"返回数据\"`" + `
+}
+
+// NewResult 构建返回结果对象
+func NewResult(code int, message string, data interface{}) *Result {
+	result := &Result{}
+	result.Code = code
+	result.Message = message
+	result.Data = data
+	return result
+}
+
+// Ok 返回正确结果
+func Ok(message string) *Result {
+	return NewResult(int(Success), message, nil)
+}
+
+// Err 返回错误结果
+func Err(message string) *Result {
+	return NewResult(int(Error), message, nil)
+}
+
+// Fail 返回失败结果
+func Fail(message string) *Result {
+	return NewResult(int(Failure), message, nil)
+}
+
+// Data 返回正确结果和数据
+func Data(data interface{}) *Result {
+	return NewResult(int(Success), "OK", data)
+}
+`
+
+var baseController = `package controllers
+
+import (
+	"{{.Appname}}/models"
+	"strings"
+
+	beego "github.com/beego/beego/v2/server/web"
+)
+
+// BaseController operations for Httpinfo
+type BaseController struct {
+	beego.Controller
+}
+
+// ServeJSON sends a json response with encoding charset.
+func (c *BaseController) ServeJSON(encoding ...bool) error {
+	str, isStr := c.Data["json"].(string)
+	if !isStr {
+		c.Data["json"] = models.Data(c.Data["json"])
+	} else if str == "OK" {
+		c.Data["json"] = models.Ok(str)
+	} else {
+		if strings.Index(str, "<QuerySeter>") == 0 {
+			str = str[13:]
+		}
+		c.Data["json"] = models.Fail(str)
+	}
+
+	return c.Controller.ServeJSON(encoding...)
+}
+`
+
 var apiControllers = `package controllers
 
 import (
@@ -652,6 +735,12 @@ func createAPI(cmd *commands.Command, args []string) int {
 		beeLogger.Log.Infof("Using '%s' as 'driver'", generate.SQLDriver)
 		beeLogger.Log.Infof("Using '%s' as 'conn'", generate.SQLConn)
 		beeLogger.Log.Infof("Using '%s' as 'tables'", generate.Tables)
+
+		os.Mkdir(path.Join(appPath, "models"), 0755)
+		utils.WriteToFile(path.Join(appPath, "models", "result.go"), resultModel)
+		utils.WriteToFile(path.Join(appPath, "controllers", "base.go"),
+			strings.Replace(baseController, "{{.Appname}}", packPath, -1))
+
 		generate.GenerateAppcode(string(generate.SQLDriver), string(generate.SQLConn), "3", string(generate.Tables), appPath)
 	} else {
 		fmt.Fprintf(output, "\t%s%screate%s\t %s%s\n", "\x1b[32m", "\x1b[1m", "\x1b[21m", path.Join(appPath, "conf", "app.conf"), "\x1b[0m")

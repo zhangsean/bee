@@ -261,10 +261,10 @@ func (tag *OrmTag) String() string {
 	}
 	desc := ""
 	if tag.Comment != "" {
-		desc = fmt.Sprintf("description:\"%s\"", tag.Comment)
+		desc = fmt.Sprintf(" description:\"%s\"", tag.Comment)
 	}
 	json := fmt.Sprintf("json:\"%s\"", tag.Column)
-	return fmt.Sprintf("`orm:\"%s\" %s %s`", strings.Join(ormOptions, ";"), desc, json)
+	return fmt.Sprintf("`orm:\"%s\" %s%s`", strings.Join(ormOptions, ";"), json, desc)
 }
 
 func GenerateAppcode(driver, connStr, level, tables, currpath string) {
@@ -452,7 +452,8 @@ func (mysqlDB *MysqlDB) GetColumns(db *sql.DB, table *Table, blackList map[strin
 		tag.Column = colName
 		tag.Comment = columnComment
 		if table.Pk == colName {
-			col.Name = "Id"
+			// struct field Id should be ID, go-lint
+			col.Name = "ID"
 			col.Type = "int"
 			if extra == "auto_increment" {
 				tag.Auto = true
@@ -1028,8 +1029,22 @@ import (
 	"github.com/beego/beego/v2/client/orm"
 )
 
+// {{modelName}} model
 {{modelStruct}}
 
+// {{modelName}}Result result
+type {{modelName}}Result struct {
+	Result
+	data {{modelName}}
+}
+
+// {{modelName}}Results result list
+type {{modelName}}Results struct {
+	Result
+	data []{{modelName}}
+}
+
+// TableName return table name
 func (t *{{modelName}}) TableName() string {
 	return "{{tableName}}"
 }
@@ -1046,11 +1061,11 @@ func Add{{modelName}}(m *{{modelName}}) (id int64, err error) {
 	return
 }
 
-// Get{{modelName}}ById retrieves {{modelName}} by Id. Returns error if
+// Get{{modelName}}ByID retrieves {{modelName}} by Id. Returns error if
 // Id doesn't exist
-func Get{{modelName}}ById(id int) (v *{{modelName}}, err error) {
+func Get{{modelName}}ByID(id int) (v *{{modelName}}, err error) {
 	o := orm.NewOrm()
-	v = &{{modelName}}{Id: id}
+	v = &{{modelName}}{ID: id}
 	if err = o.Read(v); err == nil {
 		return v, nil
 	}
@@ -1135,11 +1150,11 @@ func GetAll{{modelName}}(query map[string]string, fields []string, sortby []stri
 	return nil, err
 }
 
-// Update{{modelName}} updates {{modelName}} by Id and returns error if
+// Update{{modelName}}ByID updates {{modelName}} by Id and returns error if
 // the record to be updated doesn't exist
-func Update{{modelName}}ById(m *{{modelName}}) (err error) {
+func Update{{modelName}}ByID(m *{{modelName}}) (err error) {
 	o := orm.NewOrm()
-	v := {{modelName}}{Id: m.Id}
+	v := {{modelName}}{ID: m.ID}
 	// ascertain id exists in the database
 	if err = o.Read(&v); err == nil {
 		var num int64
@@ -1154,11 +1169,11 @@ func Update{{modelName}}ById(m *{{modelName}}) (err error) {
 // the record to be deleted doesn't exist
 func Delete{{modelName}}(id int) (err error) {
 	o := orm.NewOrm()
-	v := {{modelName}}{Id: id}
+	v := {{modelName}}{ID: id}
 	// ascertain id exists in the database
 	if err = o.Read(&v); err == nil {
 		var num int64
-		if num, err = o.Delete(&{{modelName}}{Id: id}); err == nil {
+		if num, err = o.Delete(&{{modelName}}{ID: id}); err == nil {
 			fmt.Println("Number of records deleted in database:", num)
 		}
 	}
@@ -1173,13 +1188,11 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-
-	beego "github.com/beego/beego/v2/server/web"
 )
 
 // {{ctrlName}}Controller operations for {{ctrlName}}
 type {{ctrlName}}Controller struct {
-	beego.Controller
+	BaseController
 }
 
 // URLMapping ...
@@ -1195,7 +1208,7 @@ func (c *{{ctrlName}}Controller) URLMapping() {
 // @Title Post
 // @Description create {{ctrlName}}
 // @Param	body		body 	models.{{ctrlName}}	true		"body for {{ctrlName}} content"
-// @Success 201 {int} models.{{ctrlName}}
+// @Success 201 {object} models.{{ctrlName}}Result
 // @Failure 403 body is empty
 // @router / [post]
 func (c *{{ctrlName}}Controller) Post() {
@@ -1217,13 +1230,13 @@ func (c *{{ctrlName}}Controller) Post() {
 // @Title Get One
 // @Description get {{ctrlName}} by id
 // @Param	id		path 	string	true		"The key for staticblock"
-// @Success 200 {object} models.{{ctrlName}}
+// @Success 200 {object} models.{{ctrlName}}Result
 // @Failure 403 :id is empty
 // @router /:id [get]
 func (c *{{ctrlName}}Controller) GetOne() {
 	idStr := c.Ctx.Input.Param(":id")
 	id, _ := strconv.Atoi(idStr)
-	v, err := models.Get{{ctrlName}}ById(id)
+	v, err := models.Get{{ctrlName}}ByID(id)
 	if err != nil {
 		c.Data["json"] = err.Error()
 	} else {
@@ -1241,7 +1254,7 @@ func (c *{{ctrlName}}Controller) GetOne() {
 // @Param	order	query	string	false	"Order corresponding to each sortby field, if single value, apply to all sortby fields. e.g. desc,asc ..."
 // @Param	limit	query	string	false	"Limit the size of result set. Must be an integer"
 // @Param	offset	query	string	false	"Start position of result set. Must be an integer"
-// @Success 200 {object} models.{{ctrlName}}
+// @Success 200 {object} models.{{ctrlName}}Results
 // @Failure 403
 // @router / [get]
 func (c *{{ctrlName}}Controller) GetAll() {
@@ -1300,16 +1313,16 @@ func (c *{{ctrlName}}Controller) GetAll() {
 // @Description update the {{ctrlName}}
 // @Param	id		path 	string	true		"The id you want to update"
 // @Param	body		body 	models.{{ctrlName}}	true		"body for {{ctrlName}} content"
-// @Success 200 {object} models.{{ctrlName}}
+// @Success 200 {object} models.{{ctrlName}}Result
 // @Failure 403 :id is not int
 // @router /:id [put]
 func (c *{{ctrlName}}Controller) Put() {
 	idStr := c.Ctx.Input.Param(":id")
 	id, _ := strconv.Atoi(idStr)
-	v := models.{{ctrlName}}{Id: id}
+	v := models.{{ctrlName}}{ID: id}
 	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
-		if err := models.Update{{ctrlName}}ById(&v); err == nil {
-			c.Data["json"] = "OK"
+		if err := models.Update{{ctrlName}}ByID(&v); err == nil {
+			c.Data["json"] = &v
 		} else {
 			c.Data["json"] = err.Error()
 		}
@@ -1323,7 +1336,7 @@ func (c *{{ctrlName}}Controller) Put() {
 // @Title Delete
 // @Description delete the {{ctrlName}}
 // @Param	id		path 	string	true		"The id you want to delete"
-// @Success 200 {string} delete success!
+// @Success 200 {object} models.Result
 // @Failure 403 id is empty
 // @router /:id [delete]
 func (c *{{ctrlName}}Controller) Delete() {
