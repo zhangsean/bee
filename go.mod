@@ -18,4 +18,4 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 )
 
-//replace github.com/beego/beego/v2 => ../beego
+replace github.com/beego/bee/v2 => github.com/zhangsean/bee/v2
