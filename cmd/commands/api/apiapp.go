@@ -91,6 +91,7 @@ func main() {
 var apiMainconngo = `package main
 
 import (
+	"log"
 	_ "{{.Appname}}/routers"
 
 	beego "github.com/beego/beego/v2/server/web"
@@ -99,7 +100,12 @@ import (
 )
 
 func main() {
-	orm.RegisterDataBase("default", "{{.DriverName}}", beego.AppConfig.String("sqlconn"))
+	conn, err := beego.AppConfig.String("sqlconn")
+	if err != nil {
+		log.Fatal(err.Error())
+		return
+	}
+	orm.RegisterDataBase("default", "{{.DriverName}}", conn)
 	if beego.BConfig.RunMode == "dev" {
 		beego.BConfig.WebConfig.DirectoryIndex = true
 		beego.BConfig.WebConfig.StaticDir["/swagger"] = "swagger"
