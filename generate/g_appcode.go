@@ -94,16 +94,20 @@ var typeMappingMysql = map[string]string{
 	"tinyblob":           "string",
 	"mediumblob":         "string",
 	"longblob":           "string",
-	"date":               "time.Time", // time
-	"datetime":           "time.Time",
-	"timestamp":          "time.Time",
-	"time":               "time.Time",
-	"float":              "float32", // float & decimal
-	"double":             "float64",
-	"decimal":            "float64",
-	"binary":             "string", // binary
-	"varbinary":          "string",
-	"year":               "int16",
+	// "date":               "time.Time", // time
+	// "datetime":           "time.Time",
+	// "timestamp":          "time.Time",
+	// "time":               "time.Time",
+	"date":      "string", // time
+	"datetime":  "string",
+	"timestamp": "string",
+	"time":      "string",
+	"float":     "float32", // float & decimal
+	"double":    "float64",
+	"decimal":   "float64",
+	"binary":    "string", // binary
+	"varbinary": "string",
+	"year":      "int16",
 }
 
 // typeMappingPostgres maps SQL data type to corresponding Go data type
@@ -500,8 +504,8 @@ func (mysqlDB *MysqlDB) GetColumns(db *sql.DB, table *Table, blackList map[strin
 					} else if columnDefault == "CURRENT_TIMESTAMP" {
 						tag.AutoNowAdd = true
 					}
-					// need to import time package
-					table.ImportTimePkg = true
+					// time column as string, so no need to import time package
+					table.ImportTimePkg = false
 				}
 				if isSQLDecimal(dataType) {
 					tag.Digits, tag.Decimals = extractDecimal(columnType)
