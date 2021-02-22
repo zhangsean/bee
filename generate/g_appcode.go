@@ -259,10 +259,12 @@ func (tag *OrmTag) String() string {
 	if len(ormOptions) == 0 {
 		return ""
 	}
+	desc := ""
 	if tag.Comment != "" {
-		return fmt.Sprintf("`orm:\"%s\" description:\"%s\"`", strings.Join(ormOptions, ";"), tag.Comment)
+		desc = fmt.Sprintf("description:\"%s\"", tag.Comment)
 	}
-	return fmt.Sprintf("`orm:\"%s\"`", strings.Join(ormOptions, ";"))
+	json := fmt.Sprintf("json:\"%s\"", tag.Column)
+	return fmt.Sprintf("`orm:\"%s\" %s %s`", strings.Join(ormOptions, ";"), desc, json)
 }
 
 func GenerateAppcode(driver, connStr, level, tables, currpath string) {
@@ -417,7 +419,7 @@ func (mysqlDB *MysqlDB) GetColumns(db *sql.DB, table *Table, blackList map[strin
 	// retrieve columns
 	colDefRows, err := db.Query(
 		`SELECT
-			column_name, data_type, column_type, is_nullable, column_default, extra, column_comment 
+			column_name, data_type, column_type, is_nullable, column_default, extra, column_comment
 		FROM
 			information_schema.columns
 		WHERE
