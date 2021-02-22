@@ -91,18 +91,18 @@ func main() {
 var apiMainconngo = `package main
 
 import (
-	"log"
 	_ "{{.Appname}}/routers"
 
+	beeLog "github.com/beego/bee/v2/logger"
 	beego "github.com/beego/beego/v2/server/web"
 	"github.com/beego/beego/v2/client/orm"
 	{{.DriverPkg}}
 )
 
 func main() {
-	conn, err := beego.AppConfig.String("sqlconn")
-	if err != nil {
-		log.Fatal(err.Error())
+	conn, _ := beego.AppConfig.String("sqlconn")
+	if conn == "" {
+		beeLog.Log.Error("Failed to read config [sqlconn]")
 		return
 	}
 	orm.RegisterDataBase("default", "{{.DriverName}}", conn)
