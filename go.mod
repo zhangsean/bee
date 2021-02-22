@@ -1,4 +1,4 @@
-module github.com/beego/bee/v2
+module github.com/zhangsean/bee/v2
 
 go 1.16
 
@@ -18,4 +18,4 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 )
 
-//replace github.com/beego/beego/v2 => ../beego
+// replace github.com/beego/beego/v2 => ../beego
