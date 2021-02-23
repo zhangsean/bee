@@ -316,7 +316,7 @@ const (
 type Result struct {
 	Code    int         ` + "`json:\"code\" description:\"返回结果代码\"`" + `
 	Message string      ` + "`json:\"message\" description:\"返回结果描述\"`" + `
-	Data    interface{} ` + "`json:\"data\" description:\"返回数据\"`" + `
+	Data    interface{} ` + "`json:\"data,omitempty\" description:\"返回数据\"`" + `
 }
 
 // NewResult 构建返回结果对象
