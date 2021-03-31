@@ -226,7 +226,7 @@ func GetAll{{modelName}}(query map[string]string, fields []string, sortby []stri
 
 	var l []{{modelName}}
 	qs = qs.OrderBy(sortFields...).RelatedSel()
-	if _, err = qs.Limit(limit, offset).All(&l, fields...); err == nil {
+	if _, err := qs.Limit(limit, offset).All(&l, fields...); err == nil {
 		if len(fields) == 0 {
 			for _, v := range l {
 				ml = append(ml, v)
